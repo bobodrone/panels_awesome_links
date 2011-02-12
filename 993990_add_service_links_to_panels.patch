@@ -1,0 +1,168 @@
+--- plugins/display_renderers/panels_renderer_editor.class.php	2010-10-29 21:05:21.000000000 +0200
++++ plugins/display_renderers/panels_renderer_editor.class.php	2011-02-12 16:58:11.000000000 +0100
+@@ -284,6 +284,165 @@ class panels_renderer_editor extends pan
+   function get_pane_links($pane, $content_type) {
+     $links = array();
+ 
++    /**
++     * Render a link to a menu when editing a pane.
++     */
++    if ($pane->type == 'block') {
++      $links[] = array(
++          'title' => '<span class="dropdown-header">' . t('Block') . '</span>' . theme_links($style_links),
++          'html' => TRUE,
++          'attributes' => array('class' => 'panels-sub-menu'),
++      );
++      $parts = explode("-", $pane->subtype);
++      $links[] = array(
++          'title' => t('Edit this block'),
++          'href' => url('admin/build/block/configure/' . $parts[0] . '/' . $parts[1], array('absolute' => true)),
++          'attributes' => array('target' => '_blank'),
++      );
++      $links[] = array(
++          'title' => '<hr />',
++          'html' => TRUE,
++      );
++    }
++
++    /**
++     * Render a link to a menu when editing a pane.
++     */
++    if ($pane->type == 'menu_tree') {
++      $links[] = array(
++          'title' => '<span class="dropdown-header">' . t('Menu') . '</span>' . theme_links($style_links),
++          'html' => TRUE,
++          'attributes' => array('class' => 'panels-sub-menu'),
++      );
++
++      $links[] = array(
++          'title' => t('Edit this menu'),
++          'href' => url('admin/build/menu-customize/' . $pane->subtype, array('absolute' => true)),
++          'attributes' => array('target' => '_blank'),
++      );
++      $links[] = array(
++          'title' => '<hr />',
++          'html' => TRUE,
++      );
++    }
++
++    /**
++     * Render a link to content field when editing a pane.
++     */
++    if ($pane->type == 'content_field') {
++      if ($res = db_query("SELECT type_name FROM content_node_field_instance WHERE field_name = '" . $pane->subtype . "'")) {
++        $links[] = array(
++            'title' => '<span class="dropdown-header">' . t('Content field') . '</span>' . theme_links($style_links),
++            'html' => TRUE,
++            'attributes' => array('class' => 'panels-sub-menu'),
++        );
++
++        while ($row = db_fetch_object($res)) {
++          $links[] = array(
++              'title' => t('Edit this field: ' . $pane->subtype),
++              'href' => url('admin/content/node-type/' . $row->type_name . '/fields/' . $pane->subtype, array('absolute' => true)),
++              'attributes' => array('target' => '_blank'),
++          );
++          $nids[] = $row->nid;
++        }
++        $links[] = array(
++            'title' => '<hr />',
++            'html' => TRUE,
++        );
++      }
++    }
++
++    /**
++     * Render links to a terms pages when editing a pane.
++     */
++    if ($pane->type == 'node_terms') {
++      $links[] = array(
++          'title' => '<span class="dropdown-header">' . t('Terms') . '</span>' . theme_links($style_links),
++          'html' => TRUE,
++          'attributes' => array('class' => 'panels-sub-menu'),
++      );
++      $links[] = array(
++          'title' => t('Edit vocabulary'),
++          'href' => url('admin/content/taxonomy/edit/vocabulary/' . $pane->configuration['vid'], array('absolute' => true)),
++          'attributes' => array('target' => '_blank'),
++      );
++      $links[] = array(
++          'title' => t('List terms'),
++          'href' => url('admin/content/taxonomy/' . $pane->configuration['vid'], array('absolute' => true)),
++          'attributes' => array('target' => '_blank'),
++      );
++      $links[] = array(
++          'title' => t('Add term'),
++          'href' => url('admin/content/taxonomy/' . $pane->configuration['vid'] . '/add/term', array('absolute' => true)),
++          'attributes' => array('target' => '_blank'),
++      );
++      $links[] = array(
++          'title' => '<hr />',
++          'html' => TRUE,
++      );
++    }
++
++    /**
++     * Render a links to a view pane when editing a pane.
++     */
++    if ($pane->type == 'views_panes') {
++      $links[] = array(
++          'title' => '<span class="dropdown-header">' . t('Views') . '</span>' . theme_links($style_links),
++          'html' => TRUE,
++          'attributes' => array('class' => 'panels-sub-menu'),
++      );
++
++      $viewpane = explode("-", $pane->subtype);
++      $links[] = array(
++          'title' => t('Edit this view'),
++          'href' => url('admin/build/views/edit/' . $viewpane[0], array('fragment' => 'views-tab-' . $viewpane[1], 'absolute' => true)),
++          'attributes' => array('target' => '_blank'),
++      );
++      $links[] = array(
++          'title' => '<hr />',
++          'html' => TRUE,
++      );
++    }
++
++    /**
++     * Render a links to a mini panel page when editing a pane.
++     */
++    if ($pane->type == 'panels_mini') {
++      $links[] = array(
++          'title' => '<span class="dropdown-header">' . t('Mini panel') . '</span>' . theme_links($style_links),
++          'html' => TRUE,
++          'attributes' => array('class' => 'panels-sub-menu'),
++      );
++
++      $minipane = $pane->subtype;
++      $links[] = array(
++          'title' => t('Edit mini panel settings'),
++          'href' => url('admin/build/mini-panels/list/' . $minipane . '/edit/basic', array('absolute' => true)),
++          'attributes' => array('target' => '_blank'),
++      );
++      $links[] = array(
++          'title' => t('Edit mini panel context'),
++          'href' => url('admin/build/mini-panels/list/' . $minipane . '/edit/context', array('absolute' => true)),
++          'attributes' => array('target' => '_blank'),
++      );
++      $links[] = array(
++          'title' => t('Edit mini panel layout'),
++          'href' => url('admin/build/mini-panels/list/' . $minipane . '/edit/layout', array('absolute' => true)),
++          'attributes' => array('target' => '_blank'),
++      );
++
++      $links[] = array(
++          'title' => t('Edit mini panel content'),
++          'href' => url('admin/build/mini-panels/list/' . $minipane . '/edit/content', array('absolute' => true)),
++          'attributes' => array('target' => '_blank'),
++      );
++
++      $links[] = array(
++          'title' => '<hr />',
++          'html' => TRUE,
++      );
++    }
++    
+     if (!empty($pane->shown)) {
+       $links[] = array(
+         'title' => t('Disable this pane'),
