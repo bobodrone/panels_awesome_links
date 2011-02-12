@@ -1,9 +1,29 @@
 --- plugins/display_renderers/panels_renderer_editor.class.php	2010-10-29 21:05:21.000000000 +0200
 +++ plugins/display_renderers/panels_renderer_editor.class.php	2011-02-12 16:58:11.000000000 +0100
-@@ -284,6 +284,165 @@ class panels_renderer_editor extends pan
+@@ -284,6 +284,238 @@ class panels_renderer_editor extends pan
    function get_pane_links($pane, $content_type) {
      $links = array();
  
++    /**
++     * Render a link to site information page.
++     */
++    if (in_array($pane->type, array('page_slogan', 'page_mission', 'page_footer_message'))) {
++      $links[] = array(
++          'title' => '<span class="dropdown-header">' . t('Site information') . '</span>' . theme_links($style_links),
++          'html' => TRUE,
++          'attributes' => array('class' => 'panels-sub-menu'),
++      );
++      $links[] = array(
++          'title' => t('Edit site information'),
++          'href' => url('admin/settings/site-information', array('absolute' => true)),
++          'attributes' => array('target' => '_blank'),
++      );
++      $links[] = array(
++          'title' => '<hr />',
++          'html' => TRUE,
++      );
++    }
++
 +    /**
 +     * Render a link to a menu when editing a pane.
 +     */
@@ -73,6 +93,42 @@
 +    }
 +
 +    /**
++     * Render links to node content.
++     */
++	  if ($pane->type == 'node_content') {
++		  if ($this->display->context['argument_nid_1']->restrictions['type']) {
++	      $links[] = array(
++            'title' => '<span class="dropdown-header">' . t('Node content') . '</span>' . theme_links($style_links),
++            'html' => TRUE,
++            'attributes' => array('class' => 'panels-sub-menu'),
++        );
++
++				foreach($this->display->context['argument_nid_1']->restrictions['type'] as $nodetype){
++	        $links[] = array(
++	            'title' => t('Edit: ' . $nodetype),
++	            'href' => url('admin/content/node-type/' . $nodetype, array('absolute' => true)),
++	            'attributes' => array('target' => '_blank'),
++	        );					
++         $links[] = array(
++             'title' => t('Edit:' . $nodetype . ' (fields)'),
++             'href' => url('admin/content/node-type/' . $nodetype . '/fields', array('absolute' => true)),
++             'attributes' => array('target' => '_blank'),
++         );					
++         $links[] = array(
++             'title' => t('Edit: ' . $nodetype. ' (display)'),
++             'href' => url('admin/content/node-type/' . $nodetype . '/display', array('absolute' => true)),
++             'attributes' => array('target' => '_blank'),
++         );
++		   }
++
++        $links[] = array(
++            'title' => '<hr />',
++            'html' => TRUE,
++        );
++	    }		
++		}
++
++    /**
 +     * Render links to a terms pages when editing a pane.
 +     */
 +    if ($pane->type == 'node_terms') {
@@ -123,6 +179,24 @@
 +          'html' => TRUE,
 +      );
 +    }
++    if ($pane->type == 'views') {
++      $links[] = array(
++          'title' => '<span class="dropdown-header">' . t('Views') . '</span>' . theme_links($style_links),
++          'html' => TRUE,
++          'attributes' => array('class' => 'panels-sub-menu'),
++      );
++      $view = $pane->subtype;
++			$display = $pane->configuration['display'];
++      $links[] = array(
++          'title' => t('Edit this view'),
++          'href' => url('admin/build/views/edit/' . $view, array('fragment' => 'views-tab-' . $display, 'absolute' => true)),
++          'attributes' => array('target' => '_blank'),
++      );
++      $links[] = array(
++          'title' => '<hr />',
++          'html' => TRUE,
++      );
++    }
 +
 +    /**
 +     * Render a links to a mini panel page when editing a pane.
@@ -162,7 +236,6 @@
 +          'html' => TRUE,
 +      );
 +    }
-+    
      if (!empty($pane->shown)) {
        $links[] = array(
          'title' => t('Disable this pane'),
